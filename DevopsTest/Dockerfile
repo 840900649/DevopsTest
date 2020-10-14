@@ -1,21 +1,13 @@
 #See https://aka.ms/containerfastmode to understand how Visual Studio uses this Dockerfile to build your images for faster debugging.
-
-FROM mcr.microsoft.com/dotnet/core/aspnet:3.1-buster-slim AS base
+#拉取带有图像处理的镜像
+FROM mcr.microsoft.com/dotnet/core/aspnet:3.1
+#容器时区错误问题
+ENV TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+#设置工作路径
 WORKDIR /app
-EXPOSE 80
-
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1-buster AS build
-WORKDIR /src
-COPY ["DevopsTest/DevopsTest.csproj", "DevopsTest/"]
-RUN dotnet restore "DevopsTest/DevopsTest.csproj"
 COPY . .
-WORKDIR "/src/DevopsTest"
-RUN dotnet build "DevopsTest.csproj" -c Release -o /app/build
-
-FROM build AS publish
-RUN dotnet publish "DevopsTest.csproj" -c Release -o /app/publish
-
-FROM base AS final
-WORKDIR /app
-COPY --from=publish /app/publish .
+#如果使用配置文件的端口，此端口将无效
+EXPOSE 80
+#注意：修改 DockerTest.dll的值
 ENTRYPOINT ["dotnet", "DevopsTest.dll"]
